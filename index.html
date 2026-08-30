@@ -48,6 +48,13 @@
       text-transform: lowercase;
       letter-spacing: -1px;
     }
+    
+    .subtitle {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 20px;
+      font-weight: normal;
+    }
 
     .sub-link {
       display: inline-block;
@@ -226,6 +233,7 @@
       overflow-y: auto;
       white-space: pre-wrap;
       word-wrap: break-word;
+      font-weight: normal;
     }
 
     .status-box.success {
@@ -278,21 +286,47 @@
         gap: 0;
       }
     }
+    
+    .server-status {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+    
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    
+    .status-dot.online {
+      background: #22c55e;
+    }
+    
+    .status-dot.offline {
+      background: #ef4444;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>NandReact</h1>
+    <div class="subtitle">⚡ WhatsApp Channel Reaction Sender</div>
     <a href="#" class="sub-link" id="joinChannelLink">[ join our channel ]</a>
 
     <div class="form-group">
       <label for="server">Server:</label>
       <select id="server">
-        <option value="https://satriareact.satriadeveloperz.workers.dev" selected>Server 1</option>
-        <option value="https://satriareact.satriadeveloperz.workers.dev">Server 2</option>
-        <option value="https://satriareact.satriadeveloperz.workers.dev">Server 3</option>
+        <option value="http://localhost:5000" selected>Local Server</option>
+        <option value="https://satriareact.satriadeveloperz.workers.dev">Public Worker</option>
       </select>
+      <div class="server-status" id="serverStatus">
+        <span class="status-dot online" id="statusDot"></span>
+        <span id="statusText">Local Server (localhost:5000)</span>
+      </div>
     </div>
 
     <div class="form-group">
@@ -350,18 +384,39 @@
       </div>
     </div>
 
-    <button class="btn-submit" id="submitBtn">kirim reaksi</button>
-    <button class="btn-join" id="joinBtn">JOIN OUR CHANNEL</button>
+    <button class="btn-submit" id="submitBtn">🚀 kirim reaksi</button>
+    <button class="btn-join" id="joinBtn">📱 JOIN OUR CHANNEL</button>
 
     <div class="status-box" id="statusBox">⏳ Siap mengirim reaksi...</div>
   </div>
 
   <script>
     // ============================================================
-    //  ChannelReact — JavaScript implementation (browser-compatible)
+    //  Frontend Controller — menggunakan API Python backend
     // ============================================================
 
     const MAX_EMOJIS = 4;
+
+    // ---------- DOM Elements ----------
+    const DOM = {
+      waLink: document.getElementById('wa-link'),
+      server: document.getElementById('server'),
+      jumlah: document.getElementById('jumlah'),
+      delay: document.getElementById('delay'),
+      statusBox: document.getElementById('statusBox'),
+      submitBtn: document.getElementById('submitBtn'),
+      joinBtn: document.getElementById('joinBtn'),
+      joinChannelLink: document.getElementById('joinChannelLink'),
+      selectedEmojis: document.getElementById('selectedEmojis'),
+      clearEmojis: document.getElementById('clearEmojis'),
+      addCustomEmoji: document.getElementById('addCustomEmoji'),
+      customEmoji: document.getElementById('custom-emoji'),
+      emojiBtns: document.querySelectorAll('.emoji-btn'),
+      statusDot: document.getElementById('statusDot'),
+      statusText: document.getElementById('statusText')
+    };
+
+    let selectedEmojis = [];
 
     // ---------- Emoji validation ----------
     const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/u;
@@ -377,179 +432,100 @@
       return v.length <= 8 && (EMOJI_REGEX.test(v) || TEXT_OK.has(v.toLowerCase()));
     }
 
-    // ---------- ChannelReact class ----------
-    class ChannelReact {
-      constructor(serverUrl) {
-        this.baseUrl = serverUrl;
-        this.token = null;
-        this.clientId = null;
-        this.username = null;
+    // ---------- API calls ----------
+    async function apiCall(endpoint, data = null) {
+      const serverUrl = DOM.server.value;
+      const url = `${serverUrl}${endpoint}`;
+      
+      const options = {
+        method: data ? 'POST' : 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      };
+      
+      if (data) {
+        options.body = JSON.stringify(data);
+      }
+      
+      const response = await fetch(url, options);
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP ${response.status}`);
+      }
+      
+      return result;
+    }
+
+    // ---------- Send reactions ----------
+    async function sendReactions() {
+      const url = DOM.waLink.value.trim();
+      if (!url) {
+        setStatus('❌ Masukkan link channel WhatsApp!', 'error');
+        return;
       }
 
-      async _fetch(path, body = null) {
-        const url = `${this.baseUrl}${path}`;
-        const options = {
-          method: body ? 'POST' : 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-            'Origin': this.baseUrl,
-            'Referer': this.baseUrl + '/'
-          },
-          mode: 'cors',
-          credentials: 'omit'
-        };
-        
-        if (body) {
-          options.body = JSON.stringify(body);
-        }
-        
-        try {
-          const response = await fetch(url, options);
-          
-          // Parse response
-          let data;
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-          } else {
-            const text = await response.text();
-            try {
-              data = JSON.parse(text);
-            } catch {
-              data = { success: false, message: text || 'Empty response' };
-            }
-          }
-          
-          return { status: response.status, data };
-        } catch (e) {
-          console.error('Fetch error:', e);
-          throw new Error(`Network error: ${e.message}`);
-        }
+      if (selectedEmojis.length === 0) {
+        setStatus('❌ Pilih minimal 1 emoji!', 'error');
+        return;
       }
 
-      async handshake(retries = 5) {
-        let lastError = null;
-        
-        for (let i = 0; i < retries; i++) {
-          if (i > 0) {
-            const waitTime = Math.min(3000 * Math.pow(1.5, i), 15000);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-          }
-          
-          try {
-            const { status, data } = await this._fetch('/api/handshake', {});
-            
-            console.log('Handshake response:', { status, data });
-            
-            if (status === 200 && data && data.success) {
-              this.token = data.token;
-              this.clientId = data.clientId;
-              this.username = data.step1?.username || data.username;
-              return {
-                token: data.token,
-                clientId: data.clientId,
-                username: this.username,
-                expiresInMs: data.expiresInMs || 60000
-              };
-            }
-            
-            lastError = `HTTP ${status}: ${JSON.stringify(data).slice(0, 120)}`;
-            
-            // If server returns error, try again
-            if (status >= 500 && i < retries - 1) {
-              continue;
-            }
-          } catch (e) {
-            lastError = e.message;
-            console.warn(`Handshake attempt ${i + 1} failed:`, e);
-            if (i < retries - 1) continue;
-          }
-        }
-        
-        throw new Error(`Handshake gagal: ${lastError}`);
+      const count = parseInt(DOM.jumlah.value) || 1;
+      if (count < 1 || count > 100) {
+        setStatus('❌ Jumlah harus antara 1-100', 'error');
+        return;
       }
 
-      async react(url, reactions, retries = 4) {
-        if (!this.token) {
-          await this.handshake();
+      const delay = parseInt(DOM.delay.value) || 300;
+
+      setLoading(true);
+      setStatus('⏳ Handshake dengan server...', 'info');
+
+      try {
+        // Handshake
+        const handshakeResult = await apiCall('/api/handshake');
+        if (!handshakeResult.success) {
+          throw new Error(handshakeResult.error || 'Handshake gagal');
         }
+        
+        setStatus(`✅ Handshake berhasil! Token: ${handshakeResult.token.slice(0, 20)}...`, 'success');
 
-        for (let attempt = 1; attempt <= retries; attempt++) {
-          try {
-            const { status, data } = await this._fetch('/api/react', {
-              url: url,
-              reactions: reactions,
-              token: this.token
-            });
+        let total = 0;
+        const reactions = [...selectedEmojis];
 
-            console.log('React response:', { status, data });
-
-            if (status === 200 && data && data.success) {
-              return {
-                success: true,
-                count: data.count || reactions.length,
-                message: data.message,
-                task: data.task?.status,
-                vip: data.vip?.packageName
-              };
-            }
-
-            // Token invalid -> refresh
-            if (status === 401 || status === 403) {
-              if (attempt < retries) {
-                await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-                await this.handshake();
-                continue;
-              }
-            }
-
-            if (status === 502 && attempt < retries) {
-              await new Promise(resolve => setTimeout(resolve, 2500 * attempt));
-              await this.handshake();
-              continue;
-            }
-
-            throw new Error(`HTTP ${status}: ${JSON.stringify(data).slice(0, 140)}`);
-          } catch (e) {
-            console.warn(`React attempt ${attempt} failed:`, e);
-            if (attempt === retries) throw e;
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            try {
-              await this.handshake();
-            } catch (hsError) {
-              console.warn('Re-handshake failed:', hsError);
-            }
+        for (let i = 0; i < count; i++) {
+          setStatus(`⏳ Mengirim reaksi ${i + 1}/${count}...`, 'info');
+          
+          const result = await apiCall('/api/react', {
+            url: url,
+            reactions: reactions,
+            token: handshakeResult.token
+          });
+          
+          total += result.count || reactions.length;
+          
+          setStatus(
+            `✅ #${i + 1}: ${result.count || reactions.length} reaksi terkirim (task: ${result.task || 'OK'})`,
+            'success'
+          );
+          
+          if (i < count - 1 && delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
         }
-        throw new Error(`Gagal setelah ${retries} percobaan`);
+
+        setStatus(`✅ Selesai! ${total} reaksi berhasil dikirim ke channel`, 'success');
+      } catch (e) {
+        setStatus(`❌ Error: ${e.message}`, 'error');
+        console.error('Error details:', e);
+      } finally {
+        setLoading(false);
       }
     }
 
-    // ============================================================
-    //  UI Controller
-    // ============================================================
-
-    const DOM = {
-      waLink: document.getElementById('wa-link'),
-      server: document.getElementById('server'),
-      jumlah: document.getElementById('jumlah'),
-      delay: document.getElementById('delay'),
-      statusBox: document.getElementById('statusBox'),
-      submitBtn: document.getElementById('submitBtn'),
-      joinBtn: document.getElementById('joinBtn'),
-      joinChannelLink: document.getElementById('joinChannelLink'),
-      selectedEmojis: document.getElementById('selectedEmojis'),
-      clearEmojis: document.getElementById('clearEmojis'),
-      addCustomEmoji: document.getElementById('addCustomEmoji'),
-      customEmoji: document.getElementById('custom-emoji'),
-      emojiBtns: document.querySelectorAll('.emoji-btn')
-    };
-
-    let selectedEmojis = [];
-
-    // ---------- Emoji selection ----------
+    // ---------- UI Functions ----------
     function updateSelectedDisplay() {
       if (selectedEmojis.length === 0) {
         DOM.selectedEmojis.textContent = 'Terpilih: -';
@@ -557,7 +533,6 @@
         DOM.selectedEmojis.textContent = `Terpilih: ${selectedEmojis.join(' ')} (${selectedEmojis.length}/${MAX_EMOJIS})`;
       }
       
-      // Update button states
       DOM.emojiBtns.forEach(btn => {
         const emoji = btn.dataset.emoji;
         btn.classList.toggle('selected', selectedEmojis.includes(emoji));
@@ -608,7 +583,6 @@
       saveState();
     }
 
-    // ---------- Status display ----------
     function setStatus(message, type = 'info') {
       DOM.statusBox.textContent = message;
       DOM.statusBox.className = 'status-box';
@@ -621,96 +595,20 @@
         DOM.submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
       } else {
         DOM.submitBtn.disabled = false;
-        DOM.submitBtn.textContent = 'kirim reaksi';
+        DOM.submitBtn.textContent = '🚀 kirim reaksi';
       }
     }
 
-    // ---------- Main send function ----------
-    async function sendReactions() {
-      const url = DOM.waLink.value.trim();
-      if (!url) {
-        setStatus('❌ Masukkan link channel WhatsApp!', 'error');
-        return;
-      }
-
-      if (selectedEmojis.length === 0) {
-        setStatus('❌ Pilih minimal 1 emoji!', 'error');
-        return;
-      }
-
-      const count = parseInt(DOM.jumlah.value) || 1;
-      if (count < 1 || count > 100) {
-        setStatus('❌ Jumlah harus antara 1-100', 'error');
-        return;
-      }
-
-      const delay = parseInt(DOM.delay.value) || 300;
+    function updateServerStatus() {
       const serverUrl = DOM.server.value;
-
-      setLoading(true);
-      setStatus('⏳ Handshake dengan server...', 'info');
-
-      try {
-        const client = new ChannelReact(serverUrl);
-        const handshakeResult = await client.handshake();
-        setStatus(`✅ Handshake berhasil! Token: ${client.token.slice(0, 20)}...`, 'success');
-
-        let total = 0;
-        const reactions = [...selectedEmojis];
-
-        for (let i = 0; i < count; i++) {
-          setStatus(`⏳ Mengirim reaksi ${i + 1}/${count}...`, 'info');
-          
-          const result = await client.react(url, reactions);
-          total += result.count;
-          
-          setStatus(
-            `✅ #${i + 1}: ${result.count} reaksi terkirim (task: ${result.task || 'OK'})`,
-            'success'
-          );
-          
-          if (i < count - 1 && delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-        }
-
-        setStatus(`✅ Selesai! ${total} reaksi berhasil dikirim ke channel`, 'success');
-      } catch (e) {
-        setStatus(`❌ Error: ${e.message}`, 'error');
-        console.error('Error details:', e);
-      } finally {
-        setLoading(false);
+      if (serverUrl.includes('localhost')) {
+        DOM.statusDot.className = 'status-dot online';
+        DOM.statusText.textContent = 'Local Server (localhost:5000)';
+      } else {
+        DOM.statusDot.className = 'status-dot online';
+        DOM.statusText.textContent = 'Public Worker';
       }
     }
-
-    // ---------- Event listeners ----------
-    DOM.emojiBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        toggleEmoji(btn.dataset.emoji);
-      });
-    });
-
-    DOM.clearEmojis.addEventListener('click', clearEmojis);
-    DOM.addCustomEmoji.addEventListener('click', addCustomEmojis);
-    DOM.customEmoji.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addCustomEmojis();
-    });
-
-    DOM.submitBtn.addEventListener('click', sendReactions);
-
-    DOM.joinBtn.addEventListener('click', () => {
-      const url = DOM.waLink.value.trim();
-      if (url) {
-        window.open(url, '_blank');
-      } else {
-        setStatus('❌ Masukkan link channel terlebih dahulu!', 'error');
-      }
-    });
-
-    DOM.joinChannelLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      DOM.joinBtn.click();
-    });
 
     // ---------- Save/Load state ----------
     function saveState() {
@@ -744,10 +642,43 @@
       }
     }
 
+    // ---------- Event Listeners ----------
+    DOM.emojiBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleEmoji(btn.dataset.emoji);
+      });
+    });
+
+    DOM.clearEmojis.addEventListener('click', clearEmojis);
+    DOM.addCustomEmoji.addEventListener('click', addCustomEmojis);
+    DOM.customEmoji.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addCustomEmojis();
+    });
+
+    DOM.submitBtn.addEventListener('click', sendReactions);
+
+    DOM.joinBtn.addEventListener('click', () => {
+      const url = DOM.waLink.value.trim();
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        setStatus('❌ Masukkan link channel terlebih dahulu!', 'error');
+      }
+    });
+
+    DOM.joinChannelLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      DOM.joinBtn.click();
+    });
+
+    DOM.server.addEventListener('change', () => {
+      updateServerStatus();
+      saveState();
+    });
+
     // Auto-save on changes
     DOM.waLink.addEventListener('change', saveState);
     DOM.jumlah.addEventListener('change', saveState);
-    DOM.server.addEventListener('change', saveState);
     DOM.delay.addEventListener('change', saveState);
 
     // ---------- Initialize ----------
@@ -759,11 +690,9 @@
       }
     });
 
-    // Load saved state (will override defaults if exists)
     loadSavedState();
-    
-    // Ensure display is updated
     updateSelectedDisplay();
+    updateServerStatus();
     setStatus('✅ Siap mengirim reaksi! Pilih emoji dan klik kirim.', 'info');
 
     console.log('🚀 NandReact ready!');
