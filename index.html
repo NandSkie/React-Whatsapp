@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nand - React WhatsApp Channel</title>
+  <style>
+    :root {
+      --bg-color: #fef08a;
+      --card-bg: #ffffff;
+      --border-color: #000000;
+      --primary-btn: #a855f7;
+      --secondary-btn: #3b82f6;
+      --accent-yellow: #fde047;
+      --accent-red: #ef4444;
+      --shadow-val: 5px 5px 0px #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 20px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: var(--card-bg);
+      border: 4px solid var(--border-color);
+      box-shadow: 8px 8px 0px #000000;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      text-transform: lowercase;
+      letter-spacing: -1px;
+    }
+
+    .sub-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #000;
+      text-decoration: none;
+      background: var(--accent-yellow);
+      border: 2px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: 3px 3px 0px #000;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 3px solid var(--border-color);
+      border-radius: 6px;
+      background-color: #fff;
+      font-size: 14px;
+      outline: none;
+      box-shadow: var(--shadow-val);
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      background-color: #f0fdf4;
+    }
+
+    /* Grid Preset Emoji */
+    .emoji-picker {
+      border: 3px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      background: #f8fafc;
+      box-shadow: var(--shadow-val);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .emoji-btn {
+      background: #fff;
+      border: 2px solid var(--border-color);
+      font-size: 18px;
+      padding: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000;
+      transition: transform 0.05s;
+    }
+
+    .emoji-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .emoji-btn.selected {
+      background: var(--accent-yellow);
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .emoji-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Status Terpilih & Clear */
+    .selected-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .btn-clear {
+      background: var(--accent-red);
+      color: white;
+      border: 2px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    /* Custom Emoji Input + Add */
+    .custom-emoji-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-add {
+      background: #22c55e;
+      color: #000;
+      border: 3px solid var(--border-color);
+      padding: 0 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: var(--shadow-val);
+      white-space: nowrap;
+    }
+
+    .inline-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .inline-row .form-group {
+      flex: 1;
+    }
+
+    /* Tombol Utama */
+    .btn-submit {
+      width: 100%;
+      background: var(--primary-btn);
+      color: #fff;
+      border: 3px solid var(--border-color);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow-val);
+      margin-top: 10px;
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-join {
+      width: 100%;
+      background: var(--secondary-btn);
+      color: #fff;
+      border: 3px solid var(--border-color);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow-val);
+      margin-top: 12px;
+    }
+
+    .btn-submit:active, .btn-join:active, .btn-add:active, .btn-clear:active {
+      transform: translate(3px, 3px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    /* Output Box Status */
+    .status-box {
+      margin-top: 20px;
+      background: #e0f2fe;
+      border: 3px solid var(--border-color);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: var(--shadow-val);
+      min-height: 60px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .status-box.success {
+      background: #bbf7d0;
+      border-color: #22c55e;
+    }
+
+    .status-box.error {
+      background: #fecaca;
+      border-color: #ef4444;
+    }
+
+    .status-box.info {
+      background: #bfdbfe;
+      border-color: #3b82f6;
+    }
+
+    .status-box.warning {
+      background: #fde68a;
+      border-color: #f59e0b;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px;
+      }
+      .emoji-picker {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .inline-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>NandReact</h1>
+    <a href="#" class="sub-link" id="joinChannelLink">[ join our channel ]</a>
+
+    <div class="form-group">
+      <label for="server">Server:</label>
+      <select id="server">
+        <option value="https://satriareact.satriadeveloperz.workers.dev" selected>Server 1</option>
+        <option value="https://satriareact.satriadeveloperz.workers.dev">Server 2</option>
+        <option value="https://satriareact.satriadeveloperz.workers.dev">Server 3</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="wa-link">Link Channel WA:</label>
+      <input type="text" id="wa-link" value="https://whatsapp.com/channel/0029VbBahyW545uyYpFcAn38/2304">
+    </div>
+
+    <div class="form-group">
+      <label>Pilih Emoji (max 4):</label>
+      <div class="emoji-picker">
+        <button class="emoji-btn" data-emoji="🔥">🔥</button>
+        <button class="emoji-btn" data-emoji="❤️">❤️</button>
+        <button class="emoji-btn" data-emoji="😂">😂</button>
+        <button class="emoji-btn" data-emoji="😮">😮</button>
+        <button class="emoji-btn" data-emoji="😢">😢</button>
+        <button class="emoji-btn" data-emoji="🙏">🙏</button>
+        <button class="emoji-btn" data-emoji="🎉">🎉</button>
+        <button class="emoji-btn" data-emoji="👏">👏</button>
+        <button class="emoji-btn" data-emoji="🥰">🥰</button>
+        <button class="emoji-btn" data-emoji="😍">😍</button>
+        <button class="emoji-btn" data-emoji="🤣">🤣</button>
+        <button class="emoji-btn" data-emoji="😭">😭</button>
+        <button class="emoji-btn" data-emoji="💯">💯</button>
+        <button class="emoji-btn" data-emoji="✨">✨</button>
+        <button class="emoji-btn" data-emoji="👍">👍</button>
+      </div>
+      <div class="selected-box">
+        <span id="selectedEmojis">Terpilih: -</span>
+        <button class="btn-clear" id="clearEmojis">clear</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="custom-emoji">Custom emoji (pisah koma):</label>
+      <div class="custom-emoji-row">
+        <input type="text" id="custom-emoji" placeholder="🔥, ❤️, 🥶">
+        <button class="btn-add" id="addCustomEmoji">add</button>
+      </div>
+    </div>
+
+    <div class="inline-row">
+      <div class="form-group">
+        <label for="jumlah">Jumlah:</label>
+        <input type="number" id="jumlah" value="1" min="1" max="100">
+      </div>
+      <div class="form-group">
+        <label for="delay">Delay (ms):</label>
+        <select id="delay">
+          <option value="100">100ms</option>
+          <option value="300" selected>300ms</option>
+          <option value="500">500ms</option>
+          <option value="1000">1000ms</option>
+          <option value="2000">2000ms</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submitBtn">kirim reaksi</button>
+    <button class="btn-join" id="joinBtn">JOIN OUR CHANNEL</button>
+
+    <div class="status-box" id="statusBox">⏳ Siap mengirim reaksi...</div>
+  </div>
+
+  <script>
+    // ============================================================
+    //  ChannelReact — JavaScript implementation (browser-compatible)
+    // ============================================================
+
+    const MAX_EMOJIS = 4;
+
+    // ---------- Emoji validation ----------
+    const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/u;
+    const TEXT_OK = new Set([
+      "santuy", "sad", "nice", "siap", "ok", "good", "wow", "keren",
+      "marempu", "mantap", "ganteng", "cantik", "anjay", "mantul", "limit",
+      "by", "tenkyu", "dengerin", "sell", "gajelas", "kepo", "jelek"
+    ]);
+
+    function isEmoji(s) {
+      const v = String(s || "").trim();
+      if (!v) return false;
+      return v.length <= 8 && (EMOJI_REGEX.test(v) || TEXT_OK.has(v.toLowerCase()));
+    }
+
+    // ---------- ChannelReact class ----------
+    class ChannelReact {
+      constructor(serverUrl) {
+        this.baseUrl = serverUrl;
+        this.token = null;
+        this.clientId = null;
+        this.username = null;
+      }
+
+      async _fetch(path, body = null) {
+        const url = `${this.baseUrl}${path}`;
+        const options = {
+          method: body ? 'POST' : 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+            'Origin': this.baseUrl,
+            'Referer': this.baseUrl + '/'
+          },
+          mode: 'cors',
+          credentials: 'omit'
+        };
+        
+        if (body) {
+          options.body = JSON.stringify(body);
+        }
+        
+        try {
+          const response = await fetch(url, options);
+          
+          // Parse response
+          let data;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+          } else {
+            const text = await response.text();
+            try {
+              data = JSON.parse(text);
+            } catch {
+              data = { success: false, message: text || 'Empty response' };
+            }
+          }
+          
+          return { status: response.status, data };
+        } catch (e) {
+          console.error('Fetch error:', e);
+          throw new Error(`Network error: ${e.message}`);
+        }
+      }
+
+      async handshake(retries = 5) {
+        let lastError = null;
+        
+        for (let i = 0; i < retries; i++) {
+          if (i > 0) {
+            const waitTime = Math.min(3000 * Math.pow(1.5, i), 15000);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+          
+          try {
+            const { status, data } = await this._fetch('/api/handshake', {});
+            
+            console.log('Handshake response:', { status, data });
+            
+            if (status === 200 && data && data.success) {
+              this.token = data.token;
+              this.clientId = data.clientId;
+              this.username = data.step1?.username || data.username;
+              return {
+                token: data.token,
+                clientId: data.clientId,
+                username: this.username,
+                expiresInMs: data.expiresInMs || 60000
+              };
+            }
+            
+            lastError = `HTTP ${status}: ${JSON.stringify(data).slice(0, 120)}`;
+            
+            // If server returns error, try again
+            if (status >= 500 && i < retries - 1) {
+              continue;
+            }
+          } catch (e) {
+            lastError = e.message;
+            console.warn(`Handshake attempt ${i + 1} failed:`, e);
+            if (i < retries - 1) continue;
+          }
+        }
+        
+        throw new Error(`Handshake gagal: ${lastError}`);
+      }
+
+      async react(url, reactions, retries = 4) {
+        if (!this.token) {
+          await this.handshake();
+        }
+
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            const { status, data } = await this._fetch('/api/react', {
+              url: url,
+              reactions: reactions,
+              token: this.token
+            });
+
+            console.log('React response:', { status, data });
+
+            if (status === 200 && data && data.success) {
+              return {
+                success: true,
+                count: data.count || reactions.length,
+                message: data.message,
+                task: data.task?.status,
+                vip: data.vip?.packageName
+              };
+            }
+
+            // Token invalid -> refresh
+            if (status === 401 || status === 403) {
+              if (attempt < retries) {
+                await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+                await this.handshake();
+                continue;
+              }
+            }
+
+            if (status === 502 && attempt < retries) {
+              await new Promise(resolve => setTimeout(resolve, 2500 * attempt));
+              await this.handshake();
+              continue;
+            }
+
+            throw new Error(`HTTP ${status}: ${JSON.stringify(data).slice(0, 140)}`);
+          } catch (e) {
+            console.warn(`React attempt ${attempt} failed:`, e);
+            if (attempt === retries) throw e;
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            try {
+              await this.handshake();
+            } catch (hsError) {
+              console.warn('Re-handshake failed:', hsError);
+            }
+          }
+        }
+        throw new Error(`Gagal setelah ${retries} percobaan`);
+      }
+    }
+
+    // ============================================================
+    //  UI Controller
+    // ============================================================
+
+    const DOM = {
+      waLink: document.getElementById('wa-link'),
+      server: document.getElementById('server'),
+      jumlah: document.getElementById('jumlah'),
+      delay: document.getElementById('delay'),
+      statusBox: document.getElementById('statusBox'),
+      submitBtn: document.getElementById('submitBtn'),
+      joinBtn: document.getElementById('joinBtn'),
+      joinChannelLink: document.getElementById('joinChannelLink'),
+      selectedEmojis: document.getElementById('selectedEmojis'),
+      clearEmojis: document.getElementById('clearEmojis'),
+      addCustomEmoji: document.getElementById('addCustomEmoji'),
+      customEmoji: document.getElementById('custom-emoji'),
+      emojiBtns: document.querySelectorAll('.emoji-btn')
+    };
+
+    let selectedEmojis = [];
+
+    // ---------- Emoji selection ----------
+    function updateSelectedDisplay() {
+      if (selectedEmojis.length === 0) {
+        DOM.selectedEmojis.textContent = 'Terpilih: -';
+      } else {
+        DOM.selectedEmojis.textContent = `Terpilih: ${selectedEmojis.join(' ')} (${selectedEmojis.length}/${MAX_EMOJIS})`;
+      }
+      
+      // Update button states
+      DOM.emojiBtns.forEach(btn => {
+        const emoji = btn.dataset.emoji;
+        btn.classList.toggle('selected', selectedEmojis.includes(emoji));
+        btn.disabled = selectedEmojis.length >= MAX_EMOJIS && !selectedEmojis.includes(emoji);
+      });
+    }
+
+    function toggleEmoji(emoji) {
+      const idx = selectedEmojis.indexOf(emoji);
+      if (idx >= 0) {
+        selectedEmojis.splice(idx, 1);
+      } else if (selectedEmojis.length < MAX_EMOJIS) {
+        selectedEmojis.push(emoji);
+      }
+      updateSelectedDisplay();
+      saveState();
+    }
+
+    function addCustomEmojis() {
+      const input = DOM.customEmoji.value.trim();
+      if (!input) return;
+      
+      const emojis = input.split(/[,，\s]+/).filter(e => e.trim());
+      let added = 0;
+      
+      for (const e of emojis) {
+        const clean = e.trim();
+        if (isEmoji(clean) && !selectedEmojis.includes(clean) && selectedEmojis.length < MAX_EMOJIS) {
+          selectedEmojis.push(clean);
+          added++;
+        }
+      }
+      
+      if (added > 0) {
+        updateSelectedDisplay();
+        DOM.customEmoji.value = '';
+        setStatus(`✅ Menambahkan ${added} emoji`, 'success');
+        saveState();
+      } else {
+        setStatus('⚠️ Tidak ada emoji valid yang ditambahkan', 'warning');
+      }
+    }
+
+    function clearEmojis() {
+      selectedEmojis = [];
+      updateSelectedDisplay();
+      setStatus('🧹 Emoji dibersihkan', 'info');
+      saveState();
+    }
+
+    // ---------- Status display ----------
+    function setStatus(message, type = 'info') {
+      DOM.statusBox.textContent = message;
+      DOM.statusBox.className = 'status-box';
+      if (type) DOM.statusBox.classList.add(type);
+    }
+
+    function setLoading(loading) {
+      if (loading) {
+        DOM.submitBtn.disabled = true;
+        DOM.submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
+      } else {
+        DOM.submitBtn.disabled = false;
+        DOM.submitBtn.textContent = 'kirim reaksi';
+      }
+    }
+
+    // ---------- Main send function ----------
+    async function sendReactions() {
+      const url = DOM.waLink.value.trim();
+      if (!url) {
+        setStatus('❌ Masukkan link channel WhatsApp!', 'error');
+        return;
+      }
+
+      if (selectedEmojis.length === 0) {
+        setStatus('❌ Pilih minimal 1 emoji!', 'error');
+        return;
+      }
+
+      const count = parseInt(DOM.jumlah.value) || 1;
+      if (count < 1 || count > 100) {
+        setStatus('❌ Jumlah harus antara 1-100', 'error');
+        return;
+      }
+
+      const delay = parseInt(DOM.delay.value) || 300;
+      const serverUrl = DOM.server.value;
+
+      setLoading(true);
+      setStatus('⏳ Handshake dengan server...', 'info');
+
+      try {
+        const client = new ChannelReact(serverUrl);
+        const handshakeResult = await client.handshake();
+        setStatus(`✅ Handshake berhasil! Token: ${client.token.slice(0, 20)}...`, 'success');
+
+        let total = 0;
+        const reactions = [...selectedEmojis];
+
+        for (let i = 0; i < count; i++) {
+          setStatus(`⏳ Mengirim reaksi ${i + 1}/${count}...`, 'info');
+          
+          const result = await client.react(url, reactions);
+          total += result.count;
+          
+          setStatus(
+            `✅ #${i + 1}: ${result.count} reaksi terkirim (task: ${result.task || 'OK'})`,
+            'success'
+          );
+          
+          if (i < count - 1 && delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+
+        setStatus(`✅ Selesai! ${total} reaksi berhasil dikirim ke channel`, 'success');
+      } catch (e) {
+        setStatus(`❌ Error: ${e.message}`, 'error');
+        console.error('Error details:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ---------- Event listeners ----------
+    DOM.emojiBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleEmoji(btn.dataset.emoji);
+      });
+    });
+
+    DOM.clearEmojis.addEventListener('click', clearEmojis);
+    DOM.addCustomEmoji.addEventListener('click', addCustomEmojis);
+    DOM.customEmoji.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addCustomEmojis();
+    });
+
+    DOM.submitBtn.addEventListener('click', sendReactions);
+
+    DOM.joinBtn.addEventListener('click', () => {
+      const url = DOM.waLink.value.trim();
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        setStatus('❌ Masukkan link channel terlebih dahulu!', 'error');
+      }
+    });
+
+    DOM.joinChannelLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      DOM.joinBtn.click();
+    });
+
+    // ---------- Save/Load state ----------
+    function saveState() {
+      try {
+        localStorage.setItem('nandreact_state', JSON.stringify({
+          emojis: selectedEmojis,
+          url: DOM.waLink.value,
+          count: DOM.jumlah.value,
+          server: DOM.server.value,
+          delay: DOM.delay.value
+        }));
+      } catch (e) {}
+    }
+
+    function loadSavedState() {
+      try {
+        const saved = localStorage.getItem('nandreact_state');
+        if (saved) {
+          const state = JSON.parse(saved);
+          if (state.emojis && Array.isArray(state.emojis)) {
+            selectedEmojis = state.emojis.filter(e => isEmoji(e)).slice(0, MAX_EMOJIS);
+            updateSelectedDisplay();
+          }
+          if (state.url) DOM.waLink.value = state.url;
+          if (state.count) DOM.jumlah.value = state.count;
+          if (state.server) DOM.server.value = state.server;
+          if (state.delay) DOM.delay.value = state.delay;
+        }
+      } catch (e) {
+        console.warn('Failed to load saved state:', e);
+      }
+    }
+
+    // Auto-save on changes
+    DOM.waLink.addEventListener('change', saveState);
+    DOM.jumlah.addEventListener('change', saveState);
+    DOM.server.addEventListener('change', saveState);
+    DOM.delay.addEventListener('change', saveState);
+
+    // ---------- Initialize ----------
+    // Select default emojis
+    const defaultEmojis = ['😂', '😮', '😸'];
+    defaultEmojis.forEach(e => {
+      if (isEmoji(e) && selectedEmojis.length < MAX_EMOJIS) {
+        selectedEmojis.push(e);
+      }
+    });
+
+    // Load saved state (will override defaults if exists)
+    loadSavedState();
+    
+    // Ensure display is updated
+    updateSelectedDisplay();
+    setStatus('✅ Siap mengirim reaksi! Pilih emoji dan klik kirim.', 'info');
+
+    console.log('🚀 NandReact ready!');
+    console.log(`📌 Server: ${DOM.server.value}`);
+    console.log(`📌 Channel: ${DOM.waLink.value}`);
+    console.log(`📌 Emojis: ${selectedEmojis.join(', ')}`);
+  </script>
+
+</body>
+</html>
