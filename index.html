@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NandReact - Tools React Channel Whatsapp</title>
+  <style>
+    :root {
+      --bg-color: #fef08a;
+      --card-bg: #ffffff;
+      --border-color: #000000;
+      --primary-btn: #a855f7;
+      --secondary-btn: #25d366;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --shadow-sm: 3px 3px 0px #000000;
+      --shadow-md: 5px 5px 0px #000000;
+      --shadow-lg: 6px 6px 0px #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      background: var(--card-bg);
+      border: 4px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      border-radius: 14px;
+      padding: 32px;
+    }
+
+    /* Header Professional */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3.5px solid var(--border-color);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+
+    .brand-title {
+      font-size: 36px;
+      text-transform: lowercase;
+      letter-spacing: -1.5px;
+      margin: 0;
+      color: #000;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: #475569;
+      margin-top: 4px;
+    }
+
+    /* CSS Status Dot */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #e2e8f0;
+      border: 2.5px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid #000;
+      background-color: #94a3b8;
+    }
+
+    .status-dot.online { background-color: #22c55e; }
+    .status-dot.offline { background-color: #ef4444; }
+
+    /* Promosi Channel WA */
+    .promo-card {
+      background: #dcfce7;
+      border: 3.5px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .promo-card p {
+      margin: 0;
+      font-size: 14px;
+      color: #064e3b;
+      line-height: 1.4;
+    }
+
+    .btn-wa-channel {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      background: var(--secondary-btn);
+      color: #000;
+      text-decoration: none;
+      border: 3px solid var(--border-color);
+      padding: 10px 18px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      font-size: 13px;
+      transition: transform 0.05s ease;
+    }
+
+    .btn-wa-channel:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #000;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 3px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #fff;
+      font-size: 14px;
+      outline: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    input[type="text"]:focus {
+      background-color: #f0fdf4;
+    }
+
+    /* Grid Preset Emoji */
+    .emoji-picker {
+      border: 3px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      background: #f8fafc;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+    }
+
+    .emoji-btn {
+      background: #fff;
+      border: 2.5px solid var(--border-color);
+      font-size: 20px;
+      padding: 8px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000;
+      transition: background-color 0.1s, transform 0.05s;
+    }
+
+    /* Background Hijau saat Terpilih */
+    .emoji-btn.selected {
+      background-color: var(--accent-green) !important;
+      color: #fff;
+    }
+
+    .emoji-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .selected-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .btn-clear {
+      background: var(--accent-red);
+      color: white;
+      border: 2.5px solid var(--border-color);
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    .custom-emoji-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-add {
+      background: var(--accent-green);
+      color: #000;
+      border: 3px solid var(--border-color);
+      padding: 0 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--primary-btn);
+      color: #fff;
+      border: 3.5px solid var(--border-color);
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      margin-top: 8px;
+    }
+
+    .btn-submit:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-submit:active:not(:disabled), .btn-add:active, .btn-clear:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .status-box {
+      margin-top: 20px;
+      background: #f1f5f9;
+      border: 3px solid var(--border-color);
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: var(--shadow-sm);
+      word-break: break-all;
+    }
+
+    /* Inline SVG Styling */
+    .svg-icon {
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      fill: currentColor;
+    }
+
+    @media (max-width: 600px) {
+      .emoji-picker {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .promo-card {
+        flex-direction: column;
+        text-align: center;
+      }
+      .btn-wa-channel {
+        width: 100%;
+        justify-content: center;
+      }
+      .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-row">
+      <div>
+        <h1 class="brand-title">NandReact</h1>
+        <div class="brand-subtitle">Tools React Channel Whatsapp</div>
+      </div>
+      <div class="status-badge">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="api-status-text">Checking...</span>
+      </div>
+    </div>
+
+    <!-- Promosi Channel WA dengan SVG Icon -->
+    <div class="promo-card">
+      <p>Dapatkan update server bot & info fitur terbaru langsung dari saluran resmi kami!</p>
+      <a href="https://whatsapp.com/channel/0029VayiXSpBKfi2d9flAT0N/828" target="_blank" class="btn-wa-channel">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+        JOIN CHANNEL WA
+      </a>
+    </div>
+
+    <div class="form-group">
+      <label for="wa-link">Link Post Channel WhatsApp Target:</label>
+      <input type="text" id="wa-link" placeholder="https://whatsapp.com/channel/0029VayiXSpBKfi2d9flAT0N/828">
+    </div>
+
+    <div class="form-group">
+      <label>Pilih Preset Emoji:</label>
+      <div class="emoji-picker" id="emoji-grid">
+        <button class="emoji-btn" onclick="toggleEmoji('👍', this)">👍</button>
+        <button class="emoji-btn" onclick="toggleEmoji('😵', this)">😵</button>
+        <button class="emoji-btn" onclick="toggleEmoji('😹', this)">😹</button>
+        <button class="emoji-btn" onclick="toggleEmoji('🐱', this)">🐱</button>
+        <button class="emoji-btn" onclick="toggleEmoji('🔥', this)">🔥</button>
+        <button class="emoji-btn" onclick="toggleEmoji('❤️', this)">❤️</button>
+        <button class="emoji-btn" onclick="toggleEmoji('😂', this)">😂</button>
+        <button class="emoji-btn" onclick="toggleEmoji('😮', this)">😮</button>
+        <button class="emoji-btn" onclick="toggleEmoji('😢', this)">😢</button>
+        <button class="emoji-btn" onclick="toggleEmoji('🎉', this)">🎉</button>
+      </div>
+      <div class="selected-box">
+        <span>Terpilih: <span id="selected-list">Belum ada</span></span>
+        <button class="btn-clear" onclick="clearEmojis()">Clear</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="custom-emoji">Custom Emoji (Ketik langsung tanpa koma):</label>
+      <div class="custom-emoji-row">
+        <input type="text" id="custom-emoji" placeholder="Ketik emoji langsung disini..." oninput="autoFormatEmojiInput(this)">
+        <button class="btn-add" onclick="addCustomEmojis()">Tambah</button>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submit-btn" onclick="processReaction()">KIRIM REAKSI SEKARANG</button>
+
+    <div class="status-box" id="status-box">
+      Siap memproses reaksi...
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://react-whatsapp.muhmdnand432.workers.dev/api';
+    const FIXED_SERVER = 3; // Mengunci server ke Server 3
+    let selectedEmojis = [];
+
+    // Cek Status API Server
+    async function checkApiStatus() {
+      const dotEl = document.getElementById('status-dot');
+      const textEl = document.getElementById('api-status-text');
+      try {
+        const res = await fetch(`${API_BASE}/status`);
+        const data = await res.json();
+        if(data.success && data.status === 'online') {
+          dotEl.className = 'status-dot online';
+          textEl.innerText = 'Server Online';
+        } else {
+          dotEl.className = 'status-dot offline';
+          textEl.innerText = 'Server Offline';
+        }
+      } catch (e) {
+        dotEl.className = 'status-dot offline';
+        textEl.innerText = 'Offline / Maintenance';
+      }
+    }
+    checkApiStatus();
+
+    function updateSelectedUI() {
+      const listEl = document.getElementById('selected-list');
+      listEl.innerText = selectedEmojis.length > 0 ? selectedEmojis.join(', ') : 'Belum ada';
+    }
+
+    function toggleEmoji(emoji, btnEl) {
+      const index = selectedEmojis.indexOf(emoji);
+      if (index > -1) {
+        selectedEmojis.splice(index, 1);
+        if(btnEl) btnEl.classList.remove('selected');
+      } else {
+        selectedEmojis.push(emoji);
+        if(btnEl) btnEl.classList.add('selected');
+      }
+      updateSelectedUI();
+    }
+
+    // Auto format input custom emoji agar memisahkan emoji dengan koma secara otomatis
+    function autoFormatEmojiInput(inputEl) {
+      const rawText = inputEl.value.replace(/,/g, '').trim();
+      const emojiArray = Array.from(rawText);
+      inputEl.value = emojiArray.join(', ');
+    }
+
+    function addCustomEmojis() {
+      const input = document.getElementById('custom-emoji').value;
+      if (!input) return;
+      const emojis = input.split(',').map(e => e.trim()).filter(e => e);
+      emojis.forEach(e => {
+        if (!selectedEmojis.includes(e)) selectedEmojis.push(e);
+      });
+      document.getElementById('custom-emoji').value = '';
+      updateSelectedUI();
+    }
+
+    function clearEmojis() {
+      selectedEmojis = [];
+      const buttons = document.querySelectorAll('.emoji-btn');
+      buttons.forEach(btn => btn.classList.remove('selected'));
+      updateSelectedUI();
+    }
+
+    async function processReaction() {
+      const url = document.getElementById('wa-link').value.trim();
+      const statusBox = document.getElementById('status-box');
+      const btn = document.getElementById('submit-btn');
+
+      if (!url) {
+        statusBox.innerText = "[ERROR] Masukkan URL target channel WhatsApp!";
+        return;
+      }
+
+      if (selectedEmojis.length === 0) {
+        statusBox.innerText = "[ERROR] Pilih minimal 1 emoji!";
+        return;
+      }
+
+      // Generate jumlah acak/random (1 sampai 5)
+      const randomCount = Math.floor(Math.random() * 5) + 1;
+
+      btn.disabled = true;
+      
+      try {
+        // Step 1: Handshake
+        statusBox.innerText = "[1/2] Menghubungkan ke Server 3 & Handshake Token...";
+        const handshakeRes = await fetch(`${API_BASE}/handshake`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ server: FIXED_SERVER })
+        });
+        
+        const handshakeData = await handshakeRes.json();
+        
+        if (!handshakeData.success || !handshakeData.token) {
+          throw new Error(handshakeData.error || "Handshake gagal.");
+        }
+
+        const token = handshakeData.token;
+
+        // Step 2: Send Reaction
+        statusBox.innerText = `[2/2] Memproses ${randomCount}x reaksi [${selectedEmojis.join(', ')}]...`;
+        const reactRes = await fetch(`${API_BASE}/react`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: url,
+            reactions: selectedEmojis,
+            token: token,
+            server: FIXED_SERVER
+          })
+        });
+
+        const reactData = await reactRes.json();
+
+        if (reactRes.ok && reactData.success) {
+          statusBox.innerText = `[SUCCESS] ${reactData.message || 'Reaksi telah berhasil masuk antrean!'}`;
+        } else {
+          statusBox.innerText = `[FAILED] (${reactRes.status}): ${reactData.error || reactData.message || 'Gagal mengirim reaksi'}`;
+        }
+
+      } catch (err) {
+        statusBox.innerText = `[ERROR] ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
