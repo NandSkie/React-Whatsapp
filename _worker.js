@@ -1,9 +1,11 @@
-// _worker.js - Full Cloudflare Worker untuk NandReact
+// _worker.js - Full Cloudflare Worker untuk NandReact (FIXED)
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+
+    console.log(`[${request.method}] ${path}`);
 
     // CORS headers
     const corsHeaders = {
@@ -48,8 +50,8 @@ export default {
       }
     }
 
-    // Serve HTML untuk root
-    if (path === '/' || path === '/index.html' || path === '') {
+    // Serve HTML untuk root dan semua path lainnya
+    if (path === '/' || path === '/index.html' || !path.startsWith('/api/')) {
       const html = getHTML();
       return new Response(html, {
         headers: {
@@ -59,8 +61,11 @@ export default {
       });
     }
 
-    // 404
-    return new Response('Not Found', { status: 404 });
+    // 404 untuk API yang tidak dikenal
+    return new Response(JSON.stringify({ error: 'Not Found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
   }
 };
 
@@ -99,12 +104,15 @@ async function fetchWithRetry(url, options, retries = 3) {
 }
 
 async function handleHandshake() {
+  console.log('Handshake request to:', BASE_API + '/api/handshake');
+  
   const response = await fetchWithRetry(BASE_API + '/api/handshake', {
     method: 'POST',
     body: JSON.stringify({})
   });
 
   const data = await response.json();
+  console.log('Handshake response:', response.status, data);
   
   if (response.status === 200 && data.success) {
     return {
@@ -120,6 +128,8 @@ async function handleHandshake() {
 }
 
 async function handleReact(url, reactions, token) {
+  console.log('React request:', { url, reactions, token: token?.slice(0, 20) + '...' });
+  
   if (!token) {
     const handshake = await handleHandshake();
     token = handshake.token;
@@ -135,6 +145,7 @@ async function handleReact(url, reactions, token) {
   });
 
   const data = await response.json();
+  console.log('React response:', response.status, data);
   
   if (response.status === 200 && data.success) {
     return {
@@ -148,6 +159,7 @@ async function handleReact(url, reactions, token) {
 
   // Token expired - retry with new token
   if (response.status === 401 || response.status === 403) {
+    console.log('Token expired, refreshing...');
     const handshake = await handleHandshake();
     return handleReact(url, reactions, handshake.token);
   }
@@ -601,7 +613,18 @@ function getHTML() {
         options.body = JSON.stringify(data);
       }
       
+      console.log('API Call:', url, options);
+      
       const response = await fetch(url, options);
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error(\`Server returned non-JSON: \${text.slice(0, 100)}\`);
+      }
+      
       const result = await response.json();
       
       if (!response.ok) {
